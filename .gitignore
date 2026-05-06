@@ -1,0 +1,11 @@
+# Binaries (only at repo root)
+/worktree
+/worktree-cli
+*.exe
+
+# Test binaries and coverage
+*.test
+*.out
+
+# OS
+.DS_Store
