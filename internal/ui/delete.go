@@ -3,8 +3,8 @@ package ui
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
-	"github.com/agagnon/worktree-cli/internal/git"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -30,21 +30,15 @@ func (m Model) updateDelete(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) runDelete(force bool) (tea.Model, tea.Cmd) {
-	if err := git.Remove(m.pendingWt.Path, force); err != nil {
-		m.err = err
-		return m, nil
-	}
-	l, err := buildList()
-	if err != nil {
-		m.err = err
-		return m, nil
-	}
-	l.SetSize(m.width, m.height-3)
-	m.list = l
-	m.mode = modeList
-	m.pendingWt = nil
+	m.busy = true
+	m.spinning = false
+	m.busyMsg = "Deleting worktree…"
+	m.busyHint = m.pendingWt.Path
 	m.err = nil
-	return m, nil
+	return m, tea.Batch(
+		deleteWorktreeCmd(m.pendingWt.Path, force),
+		showSpinnerAfter(200*time.Millisecond),
+	)
 }
 
 func (m Model) viewDelete() string {

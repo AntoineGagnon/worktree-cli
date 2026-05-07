@@ -2,9 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/agagnon/worktree-cli/internal/config"
-	"github.com/agagnon/worktree-cli/internal/git"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -27,20 +27,15 @@ func (m Model) updateCreate(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.err = err
 			return m, nil
 		}
-		if err := git.Add(path, branch); err != nil {
-			m.err = err
-			return m, nil
-		}
-		l, err := buildList()
-		if err != nil {
-			m.err = err
-			return m, nil
-		}
-		l.SetSize(m.width, m.height-3)
-		m.list = l
-		m.mode = modeList
-		m.input.Blur()
-		return m, nil
+		m.busy = true
+		m.spinning = false
+		m.busyMsg = "Creating worktree…"
+		m.busyHint = path
+		m.err = nil
+		return m, tea.Batch(
+			createWorktreeCmd(path, branch),
+			showSpinnerAfter(200*time.Millisecond),
+		)
 	}
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)

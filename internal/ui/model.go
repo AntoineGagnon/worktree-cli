@@ -7,8 +7,10 @@ import (
 	"github.com/agagnon/worktree-cli/internal/git"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type mode int
@@ -25,12 +27,17 @@ type Model struct {
 	list      list.Model
 	input     textinput.Model
 	help      help.Model
+	spinner   spinner.Model
 	cfg       *config.Config
 	repoRoot  string
 	width     int
 	height    int
 	selected  string
 	pendingWt *git.Worktree
+	busy      bool
+	spinning  bool
+	busyMsg   string
+	busyHint  string
 	err       error
 }
 
@@ -55,10 +62,15 @@ func New() (Model, error) {
 	ti.Prompt = "branch › "
 	ti.CharLimit = 200
 
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = spinnerStyle
+
 	return Model{
 		list:     l,
 		input:    ti,
 		help:     help.New(),
+		spinner:  sp,
 		cfg:      cfg,
 		repoRoot: root,
 	}, nil
@@ -90,7 +102,64 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case showSpinnerMsg:
+		if m.busy {
+			m.spinning = true
+			return m, m.spinner.Tick
+		}
+		return m, nil
+
+	case spinner.TickMsg:
+		if !m.spinning {
+			return m, nil
+		}
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+
+	case createDoneMsg:
+		m.busy = false
+		m.spinning = false
+		if msg.err != nil {
+			m.err = msg.err
+			return m, nil
+		}
+		l, err := buildList()
+		if err != nil {
+			m.err = err
+			return m, nil
+		}
+		l.SetSize(m.width, m.height-3)
+		m.list = l
+		m.mode = modeList
+		m.input.Blur()
+		return m, nil
+
+	case deleteDoneMsg:
+		m.busy = false
+		m.spinning = false
+		if msg.err != nil {
+			m.err = msg.err
+			return m, nil
+		}
+		l, err := buildList()
+		if err != nil {
+			m.err = err
+			return m, nil
+		}
+		l.SetSize(m.width, m.height-3)
+		m.list = l
+		m.mode = modeList
+		m.pendingWt = nil
+		return m, nil
+
 	case tea.KeyMsg:
+		if m.busy {
+			if msg.String() == "ctrl+c" {
+				return m, tea.Quit
+			}
+			return m, nil
+		}
 		switch m.mode {
 		case modeCreate:
 			return m.updateCreate(msg)
@@ -114,6 +183,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	if m.busy && m.spinning {
+		return m.viewBusy()
+	}
 	switch m.mode {
 	case modeCreate:
 		return m.viewCreate()
@@ -124,4 +196,15 @@ func (m Model) View() string {
 	default:
 		return m.viewList()
 	}
+}
+
+func (m Model) viewBusy() string {
+	header := m.spinner.View() + "  " + titleStyle.Render(m.busyMsg)
+	if m.busyHint == "" {
+		return header
+	}
+	return lipgloss.JoinVertical(lipgloss.Left,
+		header,
+		dimStyle.Render("  → "+m.busyHint),
+	)
 }

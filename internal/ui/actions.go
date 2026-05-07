@@ -5,13 +5,33 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
+	"github.com/agagnon/worktree-cli/internal/git"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type editorDoneMsg struct {
 	err          error
 	reloadConfig bool
+}
+
+type createDoneMsg struct{ err error }
+
+type deleteDoneMsg struct{ err error }
+
+type showSpinnerMsg struct{}
+
+func createWorktreeCmd(path, branch string) tea.Cmd {
+	return func() tea.Msg { return createDoneMsg{err: git.Add(path, branch)} }
+}
+
+func deleteWorktreeCmd(path string, force bool) tea.Cmd {
+	return func() tea.Msg { return deleteDoneMsg{err: git.Remove(path, force)} }
+}
+
+func showSpinnerAfter(d time.Duration) tea.Cmd {
+	return tea.Tick(d, func(time.Time) tea.Msg { return showSpinnerMsg{} })
 }
 
 func openEditor(path string) tea.Cmd {

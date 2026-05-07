@@ -9,4 +9,5 @@ var (
 	dimStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	previewStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
 	keyStyle     = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("13"))
+	spinnerStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
 )
