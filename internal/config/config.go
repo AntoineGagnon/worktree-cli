@@ -15,6 +15,7 @@ const DefaultPattern = "../{repo}-{branch}"
 type Config struct {
 	Default Default         `toml:"default"`
 	Repos   map[string]Repo `toml:"repos"`
+	Tmux    Tmux            `toml:"tmux"`
 }
 
 type Default struct {
@@ -23,6 +24,65 @@ type Default struct {
 
 type Repo struct {
 	Pattern string `toml:"pattern"`
+}
+
+type Tmux struct {
+	Commands []TmuxCommand `toml:"commands"`
+}
+
+type TmuxCommand struct {
+	Key     string `toml:"key"`
+	Label   string `toml:"label"`
+	Command string `toml:"command"`
+}
+
+const Template = `# worktree-cli config
+# Uncomment and edit the sections you want to use.
+
+# Default path pattern for new worktrees.
+# Variables: {repo} (basename of repo root), {branch}.
+# Leading ~ expands to $HOME; relative paths resolve against the repo root.
+# [default]
+# pattern = "../{repo}-{branch}"
+
+# Per-repo overrides, keyed by absolute path of the repo root.
+# [repos."/Users/you/src/example"]
+# pattern = "~/src/worktrees/example/{branch}"
+
+# Commands available from the T (Run commands) menu.
+# Each entry maps a single key to a shell command, run in a new tmux pane
+# whose cwd is the worktree. The pane closes when the command exits — append
+# "; exec $SHELL" if you want to drop into a shell after.
+# [[tmux.commands]]
+# key = "c"
+# label = "Claude"
+# command = "claude"
+#
+# [[tmux.commands]]
+# key = "v"
+# label = "Neovim"
+# command = "nvim ."
+`
+
+// EnsureExists creates the config file with a commented template if it does
+// not already exist. Returns the resolved path either way.
+func EnsureExists() (string, error) {
+	path, err := Path()
+	if err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return "", err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(path, []byte(Template), 0o644); err != nil {
+		return "", err
+	}
+	return path, nil
 }
 
 func Path() (string, error) {

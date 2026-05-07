@@ -3,27 +3,29 @@ package ui
 import "github.com/charmbracelet/bubbles/key"
 
 type listKeys struct {
-	Up     key.Binding
-	Down   key.Binding
-	Enter  key.Binding
-	New    key.Binding
-	Delete key.Binding
-	Edit   key.Binding
-	Tmux   key.Binding
-	Help   key.Binding
-	Quit   key.Binding
+	Up      key.Binding
+	Down    key.Binding
+	Enter   key.Binding
+	New     key.Binding
+	Delete  key.Binding
+	Edit    key.Binding
+	Tmux    key.Binding
+	TmuxRun key.Binding
+	Config  key.Binding
+	Help    key.Binding
+	Quit    key.Binding
 }
 
 func (k listKeys) ShortHelp() []key.Binding {
-	return []key.Binding{k.Enter, k.New, k.Delete, k.Edit, k.Tmux, k.Help, k.Quit}
+	return []key.Binding{k.Enter, k.New, k.Delete, k.Edit, k.Tmux, k.TmuxRun, k.Config, k.Help, k.Quit}
 }
 
 func (k listKeys) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.Up, k.Down},
 		{k.Enter, k.New, k.Delete},
-		{k.Edit, k.Tmux},
-		{k.Help, k.Quit},
+		{k.Edit, k.Tmux, k.TmuxRun},
+		{k.Config, k.Help, k.Quit},
 	}
 }
 
@@ -41,15 +43,17 @@ func (k createKeys) FullHelp() [][]key.Binding {
 }
 
 var listBinds = listKeys{
-	Up:     key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/k", "up")),
-	Down:   key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
-	Enter:  key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "go to")),
-	New:    key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "new")),
-	Delete: key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "delete")),
-	Edit:   key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit")),
-	Tmux:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "tmux")),
-	Help:   key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
-	Quit:   key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+	Up:      key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("↑/k", "up")),
+	Down:    key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("↓/j", "down")),
+	Enter:   key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "go to")),
+	New:     key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "new")),
+	Delete:  key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "delete")),
+	Edit:    key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit")),
+	Tmux:    key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "tmux")),
+	TmuxRun: key.NewBinding(key.WithKeys("T"), key.WithHelp("T", "Run commands")),
+	Config:  key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "config")),
+	Help:    key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "help")),
+	Quit:    key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 }
 
 var createBinds = createKeys{
