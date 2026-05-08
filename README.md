@@ -4,10 +4,16 @@ An interactive TUI for managing git worktrees, built with [Bubble Tea](https://g
 
 ## Install
 
-Clone and install the binary:
+### Homebrew (macOS / Linux)
 
 ```sh
-git clone git@github.com:AntoineGagnon/worktree-cli.git
+brew install AntoineGagnon/tap/worktree
+```
+
+### From source
+
+```sh
+git clone https://github.com/AntoineGagnon/worktree-cli.git
 cd worktree-cli
 go install ./cmd/worktree
 ```

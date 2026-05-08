@@ -1,0 +1,62 @@
+version: 2
+
+project_name: worktree
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: worktree
+    main: ./cmd/worktree
+    binary: worktree
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: worktree
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - README.md
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - name: worktree
+    repository:
+      owner: AntoineGagnon
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/AntoineGagnon/worktree-cli"
+    description: "Interactive TUI for managing git worktrees"
+    license: "MIT"
+    install: |
+      bin.install "worktree"
+    test: |
+      system "#{bin}/worktree", "help"
+    caveats: |
+      To enable the `worktree` / `wt` shell function (so `enter` cd's into
+      the selected worktree), add this to your shell rc:
+
+          eval "$(worktree shell)"
